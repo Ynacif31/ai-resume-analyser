@@ -2,9 +2,9 @@ import ScoreGauge from "~/components/ScoreGauge";
 import ScoreBadge from "~/components/ScoreBadge";
 
 const Category = ({ title, score }: { title: string, score: number }) => {
-    const textColor = score > 70 ? 'text-green-600'
+    const textColor = score > 70 ? 'text-success-600'
         : score > 49
-            ? 'text-yellow-600' : 'text-red-600';
+            ? 'text-warning-600' : 'text-error-600';
 
     return (
         <div className="resume-summary">
@@ -23,22 +23,22 @@ const Category = ({ title, score }: { title: string, score: number }) => {
 
 const Summary = ({ feedback }: { feedback: Feedback }) => {
     return (
-        <div className="bg-white rounded-2xl shadow-md w-full">
+        <div className="bg-white rounded-2xl shadow-lg border-2 border-gray-200 w-full hover:shadow-xl transition-shadow">
             <div className="flex flex-row items-center p-4 gap-8">
                 <ScoreGauge score={feedback.overallScore} />
 
                 <div className="flex flex-col gap-2">
-                    <h2 className="text-2xl font-bold">Your Resume Score</h2>
+                    <h2 className="text-2xl font-bold text-dark-300">Overall Resume Score</h2>
                     <p className="text-sm text-gray-500">
-                        This score is calculated based on the variables listed below.
+                        Comprehensive evaluation based on tone, content, structure, and skills alignment.
                     </p>
                 </div>
             </div>
 
-            <Category title="Tone & Style" score={feedback.toneAndStyle.score} />
-            <Category title="Content" score={feedback.content.score} />
-            <Category title="Structure" score={feedback.structure.score} />
-            <Category title="Skills" score={feedback.skills.score} />
+            <Category title="Professional Tone & Style" score={feedback.toneAndStyle.score} />
+            <Category title="Content Quality" score={feedback.content.score} />
+            <Category title="Document Structure" score={feedback.structure.score} />
+            <Category title="Skills Alignment" score={feedback.skills.score} />
         </div>
     )
 }

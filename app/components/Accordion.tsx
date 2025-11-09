@@ -73,7 +73,7 @@ export const AccordionItem: React.FC<AccordionItemProps> = ({
     className = "",
 }) => {
     return (
-        <div className={`overflow-hidden border-b border-gray-200 ${className}`}>
+        <div className={`overflow-hidden border-b-2 border-gray-200 bg-white/50 rounded-lg mb-2 shadow-sm hover:shadow-md transition-shadow ${className}`}>
             {children}
         </div>
     );
@@ -125,8 +125,9 @@ export const AccordionHeader: React.FC<AccordionHeaderProps> = ({
             onClick={handleClick}
             className={`
         w-full px-4 py-3 text-left
-        focus:outline-none
-        transition-colors duration-200 flex items-center justify-between cursor-pointer
+        focus:outline-none focus:ring-2 focus:ring-primary-200
+        transition-all duration-200 flex items-center justify-between cursor-pointer
+        hover:bg-primary-50/50 rounded-lg
         ${className}
       `}
         >

@@ -1,42 +1,43 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
 import { usePuterStore } from "~/lib/puter";
+import { useAuthGuard } from "~/hooks/use-auth-guard";
+
+export const loader = () => {
+    if (import.meta.env.PROD) {
+        throw new Response('Not Found', { status: 404 });
+    }
+    return null;
+};
 
 const WipeApp = () => {
-    const { auth, isLoading, error, clearError, fs, ai, kv } = usePuterStore();
-    const navigate = useNavigate();
+    useAuthGuard();
+    const { auth, fs, kv } = usePuterStore();
     const [files, setFiles] = useState<FSItem[]>([]);
 
     const loadFiles = async () => {
-        const files = (await fs.readDir("./")) as FSItem[];
-        setFiles(files);
+        try {
+            const loadedFiles = (await fs.readDir("./")) as FSItem[];
+            setFiles(loadedFiles || []);
+        } catch (err) {
+            console.error('Failed to load files:', err);
+        }
     };
 
     useEffect(() => {
         loadFiles();
-    }, []);
-
-    useEffect(() => {
-        if (!isLoading && !auth.isAuthenticated) {
-            navigate("/auth?next=/wipe");
-        }
-    }, [isLoading]);
+    }, [fs]);
 
     const handleDelete = async () => {
-        files.forEach(async (file) => {
-            await fs.delete(file.path);
-        });
-        await kv.flush();
-        loadFiles();
+        try {
+            for (const file of files) {
+                await fs.delete(file.path);
+            }
+            await kv.flush();
+            loadFiles();
+        } catch (err) {
+            console.error('Failed to delete files:', err);
+        }
     };
-
-    if (isLoading) {
-        return <div>Loading...</div>;
-    }
-
-    if (error) {
-        return <div>Error {error}</div>;
-    }
 
     return (
         <div>
@@ -51,7 +52,7 @@ const WipeApp = () => {
             </div>
             <div>
                 <button
-                    className="bg-blue-500 text-white px-4 py-2 rounded-md cursor-pointer"
+                    className="primary-gradient text-white px-4 py-2 rounded-md cursor-pointer hover:primary-gradient-hover transition-colors"
                     onClick={() => handleDelete()}
                 >
                     Wipe App Data

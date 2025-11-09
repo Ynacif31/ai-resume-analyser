@@ -61,7 +61,7 @@ const CategoryContent = ({
 }) => {
     return (
         <div className="flex flex-col gap-4 items-center w-full">
-            <div className="bg-gray-50 w-full rounded-lg px-5 py-4 grid grid-cols-2 gap-4">
+            <div className="bg-gradient-to-br from-gray-50 to-primary-50/30 w-full rounded-lg px-5 py-4 grid grid-cols-2 gap-4 border border-gray-200 shadow-sm">
                 {tips.map((tip, index) => (
                     <div className="flex flex-row gap-2 items-center" key={index}>
                         <img
@@ -80,10 +80,10 @@ const CategoryContent = ({
                     <div
                         key={index + tip.tip}
                         className={cn(
-                            "flex flex-col gap-2 rounded-2xl p-4",
+                            "flex flex-col gap-2 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow",
                             tip.type === "good"
-                                ? "bg-green-50 border border-green-200 text-green-700"
-                                : "bg-yellow-50 border border-yellow-200 text-yellow-700"
+                                ? "bg-badge-green border-2 border-success-500/30 text-badge-green-text"
+                                : "bg-badge-yellow border-2 border-warning-500/30 text-badge-yellow-text"
                         )}
                     >
                         <div className="flex flex-row gap-2 items-center">
@@ -113,7 +113,7 @@ const Details = ({ feedback }: { feedback: Feedback }) => {
                 <AccordionItem id="tone-style">
                     <AccordionHeader itemId="tone-style">
                         <CategoryHeader
-                            title="Tone & Style"
+                            title="Professional Tone & Style"
                             categoryScore={feedback.toneAndStyle.score}
                         />
                     </AccordionHeader>
@@ -124,7 +124,7 @@ const Details = ({ feedback }: { feedback: Feedback }) => {
                 <AccordionItem id="content">
                     <AccordionHeader itemId="content">
                         <CategoryHeader
-                            title="Content"
+                            title="Content Quality"
                             categoryScore={feedback.content.score}
                         />
                     </AccordionHeader>
@@ -135,7 +135,7 @@ const Details = ({ feedback }: { feedback: Feedback }) => {
                 <AccordionItem id="structure">
                     <AccordionHeader itemId="structure">
                         <CategoryHeader
-                            title="Structure"
+                            title="Document Structure"
                             categoryScore={feedback.structure.score}
                         />
                     </AccordionHeader>
@@ -146,7 +146,7 @@ const Details = ({ feedback }: { feedback: Feedback }) => {
                 <AccordionItem id="skills">
                     <AccordionHeader itemId="skills">
                         <CategoryHeader
-                            title="Skills"
+                            title="Skills Alignment"
                             categoryScore={feedback.skills.score}
                         />
                     </AccordionHeader>

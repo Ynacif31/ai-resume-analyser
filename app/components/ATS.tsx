@@ -13,10 +13,10 @@ interface ATSProps {
 const ATS: React.FC<ATSProps> = ({ score, suggestions }) => {
     // Determine background gradient based on score
     const gradientClass = score > 69
-        ? 'from-green-100'
+        ? 'from-badge-green'
         : score > 49
-            ? 'from-yellow-100'
-            : 'from-red-100';
+            ? 'from-badge-yellow'
+            : 'from-badge-red';
 
     // Determine icon based on score
     const iconSrc = score > 69
@@ -27,18 +27,18 @@ const ATS: React.FC<ATSProps> = ({ score, suggestions }) => {
 
     // Determine subtitle based on score
     const subtitle = score > 69
-        ? 'Great Job!'
+        ? 'Excellent ATS Compatibility'
         : score > 49
-            ? 'Good Start'
-            : 'Needs Improvement';
+            ? 'Good ATS Compatibility'
+            : 'Needs ATS Optimization';
 
     return (
-        <div className={`bg-gradient-to-b ${gradientClass} to-white rounded-2xl shadow-md w-full p-6`}>
+        <div className={`bg-gradient-to-b ${gradientClass} to-white rounded-2xl shadow-lg border-2 border-gray-200 w-full p-6 hover:shadow-xl transition-shadow`}>
             {/* Top section with icon and headline */}
             <div className="flex items-center gap-4 mb-6">
                 <img src={iconSrc} alt="ATS Score Icon" className="w-12 h-12" />
                 <div>
-                    <h2 className="text-2xl font-bold">ATS Score - {score}/100</h2>
+                    <h2 className="text-2xl font-bold">ATS Compatibility Score: {score}/100</h2>
                 </div>
             </div>
 
@@ -46,7 +46,7 @@ const ATS: React.FC<ATSProps> = ({ score, suggestions }) => {
             <div className="mb-6">
                 <h3 className="text-xl font-semibold mb-2">{subtitle}</h3>
                 <p className="text-gray-600 mb-4">
-                    This score represents how well your resume is likely to perform in Applicant Tracking Systems used by employers.
+                    This score indicates how effectively your resume will pass through Applicant Tracking Systems (ATS) used by most employers to screen candidates.
                 </p>
 
                 {/* Suggestions list */}
@@ -58,7 +58,7 @@ const ATS: React.FC<ATSProps> = ({ score, suggestions }) => {
                                 alt={suggestion.type === "good" ? "Check" : "Warning"}
                                 className="w-5 h-5 mt-1"
                             />
-                            <p className={suggestion.type === "good" ? "text-green-700" : "text-amber-700"}>
+                            <p className={suggestion.type === "good" ? "text-badge-green-text" : "text-badge-yellow-text"}>
                                 {suggestion.tip}
                             </p>
                         </div>
@@ -68,7 +68,7 @@ const ATS: React.FC<ATSProps> = ({ score, suggestions }) => {
 
             {/* Closing encouragement */}
             <p className="text-gray-700 italic">
-                Keep refining your resume to improve your chances of getting past ATS filters and into the hands of recruiters.
+                Continue optimizing your resume to maximize ATS compatibility and increase your chances of reaching human recruiters.
             </p>
         </div>
     )

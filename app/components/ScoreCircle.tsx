@@ -26,8 +26,8 @@ const ScoreCircle = ({ score = 75 }: { score: number }) => {
                 {/* Partial circle with gradient */}
                 <defs>
                     <linearGradient id="grad" x1="1" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#FF97AD" />
-                        <stop offset="100%" stopColor="#5171FF" />
+                        <stop offset="0%" stopColor="#2563EB" />
+                        <stop offset="100%" stopColor="#1D4ED8" />
                     </linearGradient>
                 </defs>
                 <circle

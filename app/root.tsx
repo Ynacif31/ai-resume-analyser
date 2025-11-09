@@ -8,6 +8,7 @@ import {
 } from "react-router";
 import { useEffect } from "react";
 import { usePuterStore } from "~/lib/puter";
+import { ErrorBoundary as AppErrorBoundary } from "~/components/ErrorBoundary";
 
 import type { Route } from "./+types/root";
 import "./app.css";
@@ -51,7 +52,11 @@ export default function App() {
     init();
   }, [init]);
 
-  return <Outlet />;
+  return (
+    <AppErrorBoundary>
+      <Outlet />
+    </AppErrorBoundary>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

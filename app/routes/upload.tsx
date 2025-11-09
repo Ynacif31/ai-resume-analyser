@@ -1,120 +1,144 @@
 import { type FormEvent, useState } from 'react'
 import Navbar from "~/components/Navbar";
 import FileUploader from "~/components/FileUploader";
-import { usePuterStore } from "~/lib/puter";
 import { useNavigate } from "react-router";
-import { convertPdfToImage } from "~/lib/pdf2img";
-import { generateUUID } from "~/lib/utils";
-import { prepareInstructions } from "~/constants";
+import { useAuthGuard } from "~/hooks/use-auth-guard";
+import resumeService from "~/lib/resume.service";
+import validationService from "~/lib/validation.service";
+import logger from "~/lib/logger";
 
 const Upload = () => {
-    const { auth, isLoading, fs, ai, kv } = usePuterStore();
+    useAuthGuard();
     const navigate = useNavigate();
     const [isProcessing, setIsProcessing] = useState(false);
     const [statusText, setStatusText] = useState('');
     const [file, setFile] = useState<File | null>(null);
+    const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
     const handleFileSelect = (file: File | null) => {
-        setFile(file)
-    }
+        setFile(file);
+        setValidationErrors([]);
+    };
 
-    const handleAnalyze = async ({ companyName, jobTitle, jobDescription, file }: { companyName: string, jobTitle: string, jobDescription: string, file: File }) => {
-        setIsProcessing(true);
-
-        setStatusText('Uploading the file...');
-        const uploadedFile = await fs.upload([file]);
-        if (!uploadedFile) return setStatusText('Error: Failed to upload file');
-
-        setStatusText('Converting to image...');
-        const imageFile = await convertPdfToImage(file);
-        if (!imageFile.file) return setStatusText('Error: Failed to convert PDF to image');
-
-        setStatusText('Uploading the image...');
-        const uploadedImage = await fs.upload([imageFile.file]);
-        if (!uploadedImage) return setStatusText('Error: Failed to upload image');
-
-        setStatusText('Preparing data...');
-        const uuid = generateUUID();
-        const data = {
-            id: uuid,
-            resumePath: uploadedFile.path,
-            imagePath: uploadedImage.path,
-            companyName, jobTitle, jobDescription,
-            feedback: '',
-        }
-        await kv.set(`resume:${uuid}`, JSON.stringify(data));
-
-        setStatusText('Analyzing...');
-
-        const feedback = await ai.feedback(
-            uploadedFile.path,
-            prepareInstructions({ jobTitle, jobDescription })
-        )
-        if (!feedback) return setStatusText('Error: Failed to analyze resume');
-
-        const feedbackText = typeof feedback.message.content === 'string'
-            ? feedback.message.content
-            : feedback.message.content[0].text;
-
-        data.feedback = JSON.parse(feedbackText);
-        await kv.set(`resume:${uuid}`, JSON.stringify(data));
-        setStatusText('Analysis complete, redirecting...');
-        console.log(data);
-        navigate(`/resume/${uuid}`);
-    }
-
-    const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const form = e.currentTarget.closest('form');
         if (!form) return;
+        
         const formData = new FormData(form);
+        const companyName = (formData.get('company-name') as string) || '';
+        const jobTitle = (formData.get('job-title') as string) || '';
+        const jobDescription = (formData.get('job-description') as string) || '';
 
-        const companyName = formData.get('company-name') as string;
-        const jobTitle = formData.get('job-title') as string;
-        const jobDescription = formData.get('job-description') as string;
+        const validation = validationService.validateUploadForm({
+            companyName,
+            jobTitle,
+            jobDescription,
+            file
+        });
 
-        if (!file) return;
+        if (!validation.isValid) {
+            setValidationErrors(validation.errors);
+            return;
+        }
 
-        handleAnalyze({ companyName, jobTitle, jobDescription, file });
-    }
+        if (!file) {
+            setValidationErrors(['File is required']);
+            return;
+        }
+
+        setIsProcessing(true);
+        setValidationErrors([]);
+
+        const result = await resumeService.uploadAndAnalyze(
+            {
+                companyName,
+                jobTitle,
+                jobDescription,
+                file
+            },
+            setStatusText
+        );
+
+        if (result.success && result.resumeId) {
+            navigate(`/resume/${result.resumeId}`);
+        } else {
+            const errorMessage = result.error || 'An error occurred during analysis. Please try again.';
+            setStatusText('');
+            setValidationErrors([errorMessage]);
+            setIsProcessing(false);
+            logger.error('Resume analysis failed:', errorMessage);
+        }
+    };
 
     return (
-        <main className="bg-[url('/images/bg-main.svg')] bg-cover">
+        <main className="page-background min-h-screen">
             <Navbar />
 
             <section className="main-section">
                 <div className="page-heading py-16">
-                    <h1>Smart feedback for your dream job</h1>
+                    <h1>Optimize Your Resume with AI-Powered Insights</h1>
                     {isProcessing ? (
                         <>
-                            <h2>{statusText}</h2>
-                            <img src="/images/resume-scan.gif" className="w-full" />
+                            <h2 className="text-primary-600">{statusText || 'Processing your resume...'}</h2>
+                            <img src="/images/resume-scan.gif" className="w-full max-w-md mx-auto" alt="Processing resume" />
                         </>
                     ) : (
-                        <h2>Drop your resume for an ATS score and improvement tips</h2>
+                        <h2>Upload your resume to receive an ATS compatibility score and personalized improvement recommendations.</h2>
                     )}
                     {!isProcessing && (
                         <form id="upload-form" onSubmit={handleSubmit} className="flex flex-col gap-4 mt-8">
+                            {validationErrors.length > 0 && (
+                                <div className="bg-badge-red border border-error-500/30 rounded-lg p-4">
+                                    <ul className="list-disc list-inside space-y-1">
+                                        {validationErrors.map((error, index) => (
+                                            <li key={index} className="text-badge-red-text text-sm">{error}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
                             <div className="form-div">
-                                <label htmlFor="company-name">Company Name</label>
-                                <input type="text" name="company-name" placeholder="Company Name" id="company-name" />
+                                <label htmlFor="company-name">Company Name (Optional)</label>
+                                <input 
+                                    type="text" 
+                                    name="company-name" 
+                                    placeholder="e.g., Google, Microsoft, Amazon" 
+                                    id="company-name"
+                                    aria-label="Company name"
+                                />
                             </div>
                             <div className="form-div">
-                                <label htmlFor="job-title">Job Title</label>
-                                <input type="text" name="job-title" placeholder="Job Title" id="job-title" />
+                                <label htmlFor="job-title">Job Title *</label>
+                                <input 
+                                    type="text" 
+                                    name="job-title" 
+                                    placeholder="e.g., Senior Software Engineer, Product Manager" 
+                                    id="job-title"
+                                    required
+                                    aria-label="Job title"
+                                    aria-required="true"
+                                />
                             </div>
                             <div className="form-div">
-                                <label htmlFor="job-description">Job Description</label>
-                                <textarea rows={5} name="job-description" placeholder="Job Description" id="job-description" />
+                                <label htmlFor="job-description">Job Description *</label>
+                                <textarea 
+                                    rows={5} 
+                                    name="job-description" 
+                                    placeholder="Paste the job description here to get personalized recommendations..." 
+                                    id="job-description"
+                                    required
+                                    aria-label="Job description"
+                                    aria-required="true"
+                                />
                             </div>
 
                             <div className="form-div">
-                                <label htmlFor="uploader">Upload Resume</label>
+                                <label htmlFor="uploader">Upload Resume *</label>
                                 <FileUploader onFileSelect={handleFileSelect} />
                             </div>
 
-                            <button className="primary-button" type="submit">
-                                Analyze Resume
+                            <button className="primary-button" type="submit" disabled={isProcessing}>
+                                Analyze & Get Feedback
                             </button>
                         </form>
                     )}

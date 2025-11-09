@@ -82,8 +82,11 @@ export async function convertPdfToImage(
             ); // Set quality to maximum (1.0)
         });
     } catch (err) {
-        console.error('PDF conversion error:', err);
         const errorMessage = err instanceof Error ? err.message : String(err);
+        // Logger will be imported if needed, but avoiding circular dependencies
+        if (import.meta.env.DEV) {
+            console.error('[ResumeAI] PDF conversion error:', err);
+        }
         return {
             imageUrl: "",
             file: null,
